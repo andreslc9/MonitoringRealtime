@@ -39,7 +39,7 @@ from .models import (
 from realtimeMonitoring import settings
 import dateutil.relativedelta
 from django.db.models import Avg, Max, Min, Sum
-
+from django.views import View
 
 class DashboardView(TemplateView):
     template_name = "index.html"
@@ -393,44 +393,7 @@ def create_data(
 """
 Intenta traer el promedio de una variable por ciudad
 """
-def get_avg_temperature_and_humidity_for_city(request, city_name):
-    try:
-        # Filtramos la ciudad
-        city = City.objects.get(name=city_name)
-        
-        # Filtramos las estaciones relacionadas con esa ciudad
-        stations = Station.objects.filter(location__city=city)
-        
-        # Obtenemos las mediciones para temperatura y humedad
-        temperature_measurement = Measurement.objects.get(name='temperature')
-        humidity_measurement = Measurement.objects.get(name='humidity')
 
-        # Cálculo del promedio de temperatura
-        avg_temperature = Data.objects.filter(
-            station__in=stations, 
-            measurement=temperature_measurement
-        ).aggregate(Avg('avg_value'))['avg_value__avg']
-
-        # Cálculo del promedio de humedad
-        avg_humidity = Data.objects.filter(
-            station__in=stations, 
-            measurement=humidity_measurement
-        ).aggregate(Avg('avg_value'))['avg_value__avg']
-
-        # Verificamos si hay datos disponibles
-        if avg_temperature is not None and avg_humidity is not None:
-            return JsonResponse({
-                "city": city_name,
-                "temperature_avg": avg_temperature,
-                "humidity_avg": avg_humidity
-            })
-        else:
-            return JsonResponse({"error": "No data found for temperature or humidity in this city."}, status=404)
-
-    except City.DoesNotExist:
-        return JsonResponse({"error": "City not found."}, status=404)
-    except Measurement.DoesNotExist:
-        return JsonResponse({"error": "Measurement not found."}, status=404)
 
 """
 Crea una nueva medición con valor, estación y variable {value, station, measure}
@@ -460,6 +423,48 @@ def get_last_measure(station, measurement):
     )
     return last_measure.values[-1]
 
+class CityStatsView(View):
+    def get(self, request, *args, **kwargs):
+        try:
+            city_name = request.GET.get('city', 'DefaultCityName')  # Nombre de la ciudad desde la solicitud o un valor predeterminado
+            # Filtramos la ciudad
+            city = City.objects.get(name=city_name)
+            
+            # Filtramos las estaciones relacionadas con esa ciudad
+            stations = Station.objects.filter(location__city=city)
+            
+            # Obtenemos las mediciones para temperatura y humedad
+            temperature_measurement = Measurement.objects.get(name='temperature')
+            humidity_measurement = Measurement.objects.get(name='humidity')
+
+            # Cálculo del promedio de temperatura
+            avg_temperature = Data.objects.filter(
+                station__in=stations, 
+                measurement=temperature_measurement
+            ).aggregate(Avg('avg_value'))['avg_value__avg']
+
+            # Cálculo del promedio de humedad
+            avg_humidity = Data.objects.filter(
+                station__in=stations, 
+                measurement=humidity_measurement
+            ).aggregate(Avg('avg_value'))['avg_value__avg']
+
+            # Verificamos si hay datos disponibles
+            if avg_temperature is not None and avg_humidity is not None:
+                return JsonResponse({
+                    "city": city_name,
+                    "temperature_avg": avg_temperature,
+                    "humidity_avg": avg_humidity
+                })
+            else:
+                return JsonResponse({"error": "No data found for temperature or humidity in this city."}, status=404)
+
+        except City.DoesNotExist:
+            return JsonResponse({"error": "City not found."}, status=404)
+        except Measurement.DoesNotExist:
+            return JsonResponse({"error": "Measurement not found."}, status=404)
+    
+    
 
 class LoginView(TemplateView):
     template_name = "login.html"
