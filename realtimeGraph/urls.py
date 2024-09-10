@@ -16,4 +16,5 @@ urlpatterns = [
          download_csv_data, name='historical-data'),
     #NUEVO ENDPOINT
     path('api/average-measurement/', AvgMeasurementDataView.as_view(), name='avg_measurement_data'),
+    path('city-stats/', CityStatsView.as_view(), name='city_stats'),
 ]

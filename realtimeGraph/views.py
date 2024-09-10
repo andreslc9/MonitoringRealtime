@@ -356,6 +356,38 @@ class LoginView(TemplateView):
 
         return render(request, 'login.html', {'errors': errors, 'username': form.cleaned_data['username'], 'password': form.cleaned_data['password'], })
 #CODIGO IMPLEMENTADO
+class CityStatsView(View):
+    def get(self, request, *args, **kwargs):
+        city_name = request.GET.get('city', 'DefaultCityName')  # Nombre de la ciudad desde la solicitud o un valor predeterminado
+        
+        # Obtén la ciudad
+        try:
+            city = City.objects.get(name=city_name)
+        except City.DoesNotExist:
+            return JsonResponse({'error': 'City not found'}, status=404)
+        
+        # Filtra los datos por ciudad
+        temperatures = Data.objects.filter(
+            station__location__city=city,
+            measurement__name='Temperatura'
+        ).values_list('value', flat=True)
+
+        humidities = Data.objects.filter(
+            station__location__city=city,
+            measurement__name='Humedad'
+        ).values_list('value', flat=True)
+        
+        # Calcula las estadísticas
+        avg_temp = sum(temperatures) / len(temperatures) if temperatures else None
+        avg_humidity = sum(humidities) / len(humidities) if humidities else None
+        
+        # Devuelve la respuesta en formato JSON
+        return JsonResponse({
+            'city': city_name,
+            'average_temperature': avg_temp,
+            'average_humidity': avg_humidity,
+        })
+
 class AvgMeasurementDataView(TemplateView):
     def get(self, request, *args, **kwargs):
         city = request.GET.get('city', None)
