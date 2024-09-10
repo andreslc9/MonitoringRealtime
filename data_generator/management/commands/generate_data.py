@@ -7,7 +7,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         if len(args) == 0:
-            data_qty = 500000
+            data_qty = 20000
         else:
             data_qty = int(args[0])
         utils.register_users()

@@ -356,7 +356,7 @@ Se usa para hacer pruebas de carga.
 """
 
 
-def generateMockData(quantity: int = 500000):
+def generateMockData(quantity: int = 20000):
     from realtimeGraph.views import create_data
 
     print("Starting generation of {} data...".format(quantity))
