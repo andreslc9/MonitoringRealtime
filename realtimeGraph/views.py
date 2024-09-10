@@ -434,8 +434,8 @@ class CityStatsView(View):
             stations = Station.objects.filter(location__city=city)
             
             # Obtenemos las mediciones para temperatura y humedad
-            temperature_measurement = Measurement.objects.get(name='temperature')
-            humidity_measurement = Measurement.objects.get(name='humidity')
+            temperature_measurement = Measurement.objects.get(name='Temperatura')
+            humidity_measurement = Measurement.objects.get(name='Humedad')
 
             # Cálculo del promedio de temperatura
             avg_temperature = Data.objects.filter(
